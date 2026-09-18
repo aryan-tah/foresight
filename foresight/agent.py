@@ -38,6 +38,13 @@ for developer adoption) and say in one clause that it is a proxy.
 fetches in parallel.
 - Choose a horizon that fits the question; 30 days is a sensible default. \
 Horizons are in days.
+- For anything with a yearly rhythm (holidays, seasons, annual events, \
+"when will it peak"), fetch the maximum history (1000 days) so the model sees \
+previous cycles, and pick a horizon that reaches past the event. When it \
+matters, say what date the forecast peaks on and how that compares with the \
+previous years' peaks in the data. Compare honestly: if past peaks sit \
+outside the forecast band, say the forecast looks too low or too high rather \
+than calling it consistent.
 - If a tool fails, read the error and try a corrected name or another source \
 before giving up.
 

@@ -72,3 +72,21 @@ def test_chart_payload_is_json_ready_and_bounded(model):
     json.dumps(chart)
     assert len(chart["history"]["values"]) == 120  # 4x the horizon
     assert len(chart["forecast"]["median"]) == 30
+
+
+def test_long_horizon_charts_show_two_years_so_yearly_cycles_are_visible(model):
+    chart = run_forecast(make_series(range(1000)), 60, model).chart()
+    assert len(chart["history"]["values"]) == 800
+
+
+def test_summaries_expose_peaks_so_the_agent_can_check_seasonal_claims(model):
+    values = [10] * 400
+    values[100], values[350] = 500, 900  # one spike in each calendar year
+    series = make_series(values)
+    peaks = series.summary()["peak_by_year"]
+    assert [(p["year"], p["value"]) for p in peaks] == [(2025, 500), (2026, 900)]
+    assert peaks[1]["date"] == series.dates[350].isoformat()
+
+    summary = run_forecast(series, 14, model).summary()
+    assert summary["forecast_peak"]["date"] == "2026-09-18"  # flat fake forecast: first day wins
+    assert summary["forecast_peak"]["weekday"] == "Friday"

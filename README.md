@@ -8,6 +8,10 @@ LLMs are bad at numbers. Forecasting models can't read. Foresight pairs them:
 - **TimesFM 3.0** (Google's time-series foundation model, run locally) produces the forecast and its uncertainty bands, zero-shot.
 - Every forecast is **backtested on the spot**: the most recent period is hidden, forecast blind, and scored against a naive "repeat last week" baseline. The agent has to ground its confidence in that result, and the UI shows it under every chart.
 
+![Foresight predicting the Halloween spike](docs/halloween.png)
+
+Nobody told the forecasting model what Halloween is or when it happens. From raw daily numbers alone it puts the peak on 31 October. Asked about Black Friday it says 27 November, the correct date for 2026, even though last year's peak was on the 28th.
+
 ```
 "Is interest in ChatGPT still growing?"
    └─ Claude ─→ search_wikipedia ─→ get_wikipedia_pageviews ─→ forecast (TimesFM 3.0)

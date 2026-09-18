@@ -41,12 +41,24 @@ class Series:
             "max": sig(max(v)),
             "mean_last_7": sig(mean(recent)),
             "source": self.source_url,
+            "peak_by_year": self.peaks_by_year(),
         }
         if prior and mean(prior):
             out["change_last_7_vs_prior_7_pct"] = round(
                 100 * (mean(recent) - mean(prior)) / abs(mean(prior)), 1
             )
         return out
+
+    def peaks_by_year(self) -> list[dict]:
+        """Highest day of each calendar year: lets the agent check seasonal claims."""
+        best: dict[int, int] = {}
+        for i, d in enumerate(self.dates):
+            if d.year not in best or self.values[i] > self.values[best[d.year]]:
+                best[d.year] = i
+        return [
+            {"year": y, "date": self.dates[i].isoformat(), "value": sig(self.values[i])}
+            for y, i in sorted(best.items())
+        ]
 
 
 @dataclass

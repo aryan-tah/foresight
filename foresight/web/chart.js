@@ -142,12 +142,18 @@ function render(plot, tip, chart) {
   root.append(line(hist.values.map((v, i) => [i, v]), "var(--history)"));
   root.append(line([[last, anchor], ...fc.median.map((v, k) => [nH + k, v])], "var(--forecast)"));
 
-  // End dot + the one direct label: where the median lands
-  const endV = fc.median[nF - 1];
-  root.append(svg("circle", { cx: x(n - 1), cy: y(endV), r: 4, fill: "var(--forecast)", stroke: "var(--surface)", "stroke-width": 2 }));
-  const endLabel = svg("text", { x: x(n - 1) + 9, y: y(endV) + 4, class: "end" });
-  endLabel.textContent = compact(endV);
-  root.append(endLabel);
+  // The one direct label: the forecast's peak when there is a real one
+  // (a seasonal spike), otherwise where the median lands.
+  const peakK = fc.median.indexOf(Math.max(...fc.median));
+  const spike = peakK < nF - 1 && fc.median[peakK] > 1.3 * fc.median[nF - 1] && fc.median[peakK] > 1.3 * anchor;
+  const k = spike ? peakK : nF - 1;
+  const [d, mo] = [Number(fc.dates[k].slice(8)), MONTHS[Number(fc.dates[k].slice(5, 7)) - 1]];
+  root.append(svg("circle", { cx: x(nH + k), cy: y(fc.median[k]), r: 4, fill: "var(--forecast)", stroke: "var(--surface)", "stroke-width": 2 }));
+  const mark = spike
+    ? svg("text", { x: x(nH + k) - 10, y: y(fc.median[k]) + 4, class: "end", "text-anchor": "end" })
+    : svg("text", { x: x(nH + k) + 9, y: y(fc.median[k]) + 4, class: "end" });
+  mark.textContent = spike ? `${compact(fc.median[k])} · ${d} ${mo}` : compact(fc.median[k]);
+  root.append(mark);
 
   // Hover layer: crosshair snaps to the nearest day
   const cross = svg("line", { y1: M.top, y2: H - M.bottom, stroke: "var(--muted)", "stroke-width": 1, visibility: "hidden" });

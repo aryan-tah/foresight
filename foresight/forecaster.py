@@ -20,6 +20,7 @@ from .series import Series, sig
 MIN_HISTORY = 30
 MAX_HORIZON = 180
 WEEK = 7
+LONG_HORIZON = 45  # from here on, charts show two years of history
 # Deciles 0.1..0.9 come back in this order; pick the ones the fan chart uses.
 _Q = {"p10": 0, "p30": 2, "p70": 6, "p90": 8}
 
@@ -75,6 +76,7 @@ class Forecast:
         recent = float(np.mean(s.values[-h:]))
         ahead = float(np.mean(self.point))
         step = max(1, h // 6)
+        peak = int(np.argmax(self.point))
         return {
             "series_id": s.id,
             "label": s.label,
@@ -86,6 +88,13 @@ class Forecast:
                 "median": _r(self.point[-1]),
                 "p10": _r(self.bands["p10"][-1]),
                 "p90": _r(self.bands["p90"][-1]),
+            },
+            "forecast_peak": {
+                "date": self.dates[peak].isoformat(),
+                "weekday": self.dates[peak].strftime("%A"),
+                "median": _r(self.point[peak]),
+                "p10": _r(self.bands["p10"][peak]),
+                "p90": _r(self.bands["p90"][peak]),
             },
             "mean_next_period": _r(ahead),
             "mean_same_length_recent_period": _r(recent),
@@ -104,10 +113,12 @@ class Forecast:
         }
 
     def chart(self) -> dict:
-        """Payload the frontend draws: the forecast plus ~4x as much history,
-        so the fan stays readable next to the past instead of a sliver."""
+        """Payload the frontend draws. Short forecasts get ~4x as much history so
+        the fan stays readable; long ones get two years, so yearly cycles (the
+        evidence for a seasonal forecast) are on screen."""
         s = self.series
-        history_points = min(365, max(90, 4 * len(self.point)))
+        horizon = len(self.point)
+        history_points = 800 if horizon >= LONG_HORIZON else min(365, max(90, 4 * horizon))
         return {
             "series_id": s.id,
             "label": s.label,

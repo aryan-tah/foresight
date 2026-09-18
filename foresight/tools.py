@@ -18,7 +18,7 @@ from .series import SeriesStore
 
 _DAYS = {
     "type": "integer",
-    "description": "Days of history to fetch. More is better for forecasting; default 400.",
+    "description": "Days of history to fetch (60-1000, default 400). Use 1000 for anything seasonal or yearly.",
 }
 
 TOOLS = [
