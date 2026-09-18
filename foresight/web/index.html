@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Foresight</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%230b0b0b'/%3E%3Cpath d='M3 11l3-3 2.5 2L13 5' fill='none' stroke='%233987e5' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="bar">
+    <a class="mark" href="/">Foresight</a>
+    <span class="status" id="status"><i></i><span>Loading TimesFM</span></span>
+  </header>
+
+  <main id="thread" class="thread">
+    <section class="intro" id="intro">
+      <h1>Ask about the future.<br>Get a forecast, not a guess.</h1>
+      <p>
+        Claude works out what data answers your question and pulls it live.
+        Google's TimesFM&nbsp;3.0 forecasts it. Every answer is scored against
+        how well the model predicted the recent past, so you know how far to trust it.
+      </p>
+      <div class="examples" id="examples">
+        <button type="button">Is interest in ChatGPT still growing?</button>
+        <button type="button">Will the anthropic or the openai Python package have more downloads next month?</button>
+        <button type="button">How warm will Mumbai be over the next two weeks?</button>
+        <button type="button">Where could Bitcoin be in 30 days?</button>
+      </div>
+    </section>
+  </main>
+
+  <form class="composer" id="composer" autocomplete="off">
+    <div class="composer-inner">
+      <textarea id="input" rows="1" placeholder="Ask what happens next…" aria-label="Your question"></textarea>
+      <button type="submit" id="send" aria-label="Send">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <p class="fine">Forecasts are statistical, not advice. The model sees past data only, never the news.</p>
+  </form>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>
