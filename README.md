@@ -18,10 +18,10 @@ LLMs are bad at numbers. Forecasting models can't read. Foresight pairs them:
 
 ## Run it
 
-Needs [uv](https://docs.astral.sh/uv/) and an [Anthropic API key](https://console.anthropic.com/settings/keys). No GPU: TimesFM takes ~0.1s per forecast on a laptop CPU.
+Needs [uv](https://docs.astral.sh/uv/) and either an [Anthropic API key](https://console.anthropic.com/settings/keys) or an [OpenRouter key](https://openrouter.ai/keys). A question costs about 2–4 cents with Claude Opus 5. No GPU: TimesFM takes ~0.1s per forecast on a laptop CPU.
 
 ```bash
-cp .env.example .env          # then paste your ANTHROPIC_API_KEY into it
+cp .env.example .env          # then paste ANTHROPIC_API_KEY or OPEN_ROUTER_KEY into it
 uv sync
 uv run uvicorn foresight.server:app
 ```
@@ -49,6 +49,7 @@ foresight/
   sources.py     Live data fetchers → gap-free daily series ending yesterday.
   forecaster.py  TimesFM 3.0 wrapper, quantile bands, and the backtest.
   tools.py       Tool schemas + dispatcher. Failures become error results Claude can recover from.
+  llm.py         Claude via the Anthropic API or OpenRouter, same SDK and loop either way.
   agent.py       Streaming tool-use loop (parallel tool calls, rollback on failed turns).
   server.py      FastAPI + server-sent events.
   web/           No-build frontend. Hand-written SVG fan chart with crosshair, table view, dark mode.

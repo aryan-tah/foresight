@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 from collections import OrderedDict
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-import anthropic
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, StreamingResponse
@@ -18,7 +16,7 @@ from pydantic import BaseModel, Field
 
 load_dotenv()
 
-from . import sources  # noqa: E402
+from . import llm as llm_config, sources  # noqa: E402
 from .agent import Session, run_turn  # noqa: E402  (reads env at import)
 from .forecaster import TimesFM  # noqa: E402
 from .tools import ToolContext  # noqa: E402
@@ -31,7 +29,7 @@ class State:
     http = None
     model = TimesFM()
     model_ready = False
-    llm: anthropic.AsyncAnthropic | None = None
+    llm: llm_config.LLM | None = None
     sessions: OrderedDict[str, Session] = OrderedDict()
 
 
@@ -41,7 +39,7 @@ state = State()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     state.http = sources.new_client()
-    state.llm = anthropic.AsyncAnthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
+    state.llm = llm_config.from_env()
 
     async def warm():
         # Loading the checkpoint takes a while; do it before the first question.
@@ -83,7 +81,7 @@ async def chat(req: ChatRequest):
             yield _sse(
                 {
                     "type": "error",
-                    "message": "No ANTHROPIC_API_KEY set. Add it to .env and restart the server.",
+                    "message": "No API key set. Add ANTHROPIC_API_KEY or OPEN_ROUTER_KEY to .env and restart.",
                 }
             )
             return
@@ -99,7 +97,11 @@ async def chat(req: ChatRequest):
 
 @app.get("/api/health")
 async def health():
-    return {"model_ready": state.model_ready, "llm_configured": state.llm is not None}
+    return {
+        "model_ready": state.model_ready,
+        "llm_configured": state.llm is not None,
+        "llm": f"{state.llm.model} via {state.llm.provider}" if state.llm else None,
+    }
 
 
 @app.get("/")

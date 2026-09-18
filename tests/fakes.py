@@ -5,6 +5,8 @@ from types import SimpleNamespace as NS
 import anthropic
 import httpx
 
+from foresight.llm import LLM
+
 
 def text(t):
     return NS(type="text", text=t)
@@ -51,6 +53,10 @@ class FakeAnthropic:
         # snapshot: the agent mutates the same list afterwards
         self.requests.append({**kwargs, "messages": list(kwargs["messages"])})
         return _Stream(self.script.pop(0))
+
+
+def fake_llm(script, **extras):
+    return LLM(client=FakeAnthropic(script), model="test-model", provider="TestProvider", extras=extras)
 
 
 def auth_error():

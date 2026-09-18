@@ -125,6 +125,7 @@ body {
 }
 .turn.agent > * + * { margin-top: 14px; }
 .say { margin: 0; white-space: pre-wrap; }
+.say code { padding: 1px 5px; border-radius: 5px; background: var(--wash); font: 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; }
 .say.err { color: var(--critical); }
 .thinking { color: var(--muted); animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: 0.45; } }

@@ -47,11 +47,17 @@ async function pollHealth() {
   setTimeout(pollHealth, 2000);
 }
 
-// Plain text with **bold** only; everything enters the DOM as text nodes.
+// Plain text plus **bold**, *emphasis* and `code` only; everything enters the DOM as text nodes.
 function appendText(node, text) {
   node.dataset.raw = (node.dataset.raw ?? "") + text;
+  const parts = node.dataset.raw.split(/(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`)/);
   node.replaceChildren(
-    ...node.dataset.raw.split("**").map((part, i) => (i % 2 ? el("strong", "", part) : document.createTextNode(part))),
+    ...parts.map((part) => {
+      if (part.startsWith("**") && part.endsWith("**") && part.length > 4) return el("strong", "", part.slice(2, -2));
+      if (part.startsWith("*") && part.endsWith("*") && part.length > 2) return el("em", "", part.slice(1, -1));
+      if (part.startsWith("`") && part.endsWith("`") && part.length > 2) return el("code", "", part.slice(1, -1));
+      return document.createTextNode(part);
+    }),
   );
 }
 

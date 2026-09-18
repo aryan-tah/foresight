@@ -16,9 +16,9 @@ from datetime import date
 
 import anthropic
 
+from .llm import LLM
 from .tools import TOOLS, ToolContext, execute
 
-MODEL = os.environ.get("FORESIGHT_MODEL", "claude-opus-5")
 EFFORT = os.environ.get("FORESIGHT_EFFORT", "medium")
 MAX_STEPS = 12
 
@@ -54,7 +54,10 @@ happened. If it lost to the baseline, say the forecast deserves little weight.
 upcoming launches, news or shocks; mention that when it matters. Asset prices \
 are close to a random walk, so treat price forecasts as a range, not a call, \
 and never give financial advice.
-- Keep it short and conversational: a few sentences, plain text, no headers.
+- Keep it short: the chart carries the detail. Two brief paragraphs at most, \
+around 100 words in total: the answer with its key figures, then how far to \
+trust it. Conversational plain text, no headers, lists or markdown.
+- Before calling tools, at most one short sentence saying what you will look at.
 
 Today's date is {today}."""
 
@@ -65,9 +68,7 @@ class Session:
     messages: list = field(default_factory=list)
 
 
-async def run_turn(
-    session: Session, user_text: str, client: anthropic.AsyncAnthropic
-) -> AsyncIterator[dict]:
+async def run_turn(session: Session, user_text: str, llm: LLM) -> AsyncIterator[dict]:
     """Run one user turn to completion, yielding UI events as they happen.
 
     A failed turn is rolled back, so the history never keeps a half-finished
@@ -82,8 +83,8 @@ async def run_turn(
 
     for _ in range(MAX_STEPS):
         try:
-            async with client.beta.messages.stream(
-                model=MODEL,
+            async with llm.client.beta.messages.stream(
+                model=llm.model,
                 max_tokens=16000,
                 system=SYSTEM.format(today=date.today().isoformat()),
                 tools=TOOLS,
@@ -91,26 +92,23 @@ async def run_turn(
                 thinking={"type": "adaptive"},
                 output_config={"effort": EFFORT},
                 cache_control={"type": "ephemeral"},
-                # If a safety classifier declines, re-run on Anthropic's
-                # recommended fallback model inside the same request.
-                fallbacks="default",
-                betas=["server-side-fallback-2026-07-01"],
+                **llm.extras,
             ) as stream:
                 async for event in stream:
                     if event.type == "text":
                         yield {"type": "text", "text": event.text}
                 response = await stream.get_final_message()
         except anthropic.AuthenticationError:
-            yield fail("The Anthropic API key was rejected. Check ANTHROPIC_API_KEY in .env.")
+            yield fail(f"{llm.provider} rejected the API key. Check the key in .env.")
             return
         except anthropic.RateLimitError:
-            yield fail("Rate limited by the Anthropic API. Wait a moment and try again.")
+            yield fail(f"Rate limited by {llm.provider}. Wait a moment and try again.")
             return
         except anthropic.APIStatusError as e:
-            yield fail(f"Anthropic API error {e.status_code}: {e.message}")
+            yield fail(f"{llm.provider} API error {e.status_code}: {e.message}")
             return
         except anthropic.APIConnectionError:
-            yield fail("Could not reach the Anthropic API. Check your connection.")
+            yield fail(f"Could not reach {llm.provider}. Check your connection.")
             return
 
         session.messages.append({"role": "assistant", "content": response.content})
